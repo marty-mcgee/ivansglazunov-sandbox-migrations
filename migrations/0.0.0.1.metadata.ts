@@ -84,6 +84,14 @@ export async function down(knex: Knex) {
 
   const md = await export_metadata();
 
+  // nodes_props_numbers
+  debug('nodes_props_numbers');
+  deleteTable(md, 'nodes_props_numbers');
+
+  // nodes_props_strings
+  debug('nodes_props_strings');
+  deleteTable(md, 'nodes_props_strings');
+
   // nodes_props_types
   debug('nodes_props_types');
   deleteTable(md, 'nodes_props_types');

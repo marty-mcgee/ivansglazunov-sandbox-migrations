@@ -11,3 +11,15 @@ HASURA_SECRET='<x-hasura-admin-secret>'
 HASURA_PATH='<gqlurl>'
 POSTGRES='<postgresurl>'
 ```
+
+## sql
+
+#### find all parent nodes ids of nodeId
+
+```sql
+SELECT "links_indexes"."index_node_id"
+FROM "links_indexes" as "li1"
+WHERE
+"li1"."list_node_id" = '${nodeId}' AND
+"li1"."index_node_id" != '${nodeId}';
+```
