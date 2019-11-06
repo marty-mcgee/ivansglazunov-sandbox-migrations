@@ -18,7 +18,7 @@ LIMIT 1
 
 export const WILL_NOT_ROOT = (node_id) => `
 SELECT
-COUNT(l0."id")
+l0."id"
 FROM
 "links" as l0
 WHERE
@@ -55,8 +55,8 @@ export const F_NODE_DELETE_UP = `
   CREATE OR REPLACE FUNCTION nodes__on_delete__function()
   RETURNS TRIGGER AS $trigger$
   BEGIN
-    DELETE FROM "links"
-    WHERE "source_id" = OLD."id";
+    DELETE FROM "links_indexes"
+    WHERE "list_node_id" = OLD."id";
     RETURN OLD;
   END;
   $trigger$ language 'plpgsql';
@@ -67,7 +67,7 @@ export const F_NODE_DELETE_DOWN = `
 `;
 
 export const T_NODE_DELETE_UP = `
-  CREATE TRIGGER nodes__on_delete__trigger AFTER INSERT ON "nodes" FOR EACH ROW EXECUTE PROCEDURE nodes__on_delete__function();
+  CREATE TRIGGER nodes__on_delete__trigger AFTER DELETE ON "nodes" FOR EACH ROW EXECUTE PROCEDURE nodes__on_delete__function();
 `;
 
 export const T_NODE_DELETE_DOWN = `
@@ -115,7 +115,7 @@ export const F_LINK_INSERT_UP = `
           INSERT INTO "links_indexes" ("index_node_id", "index_link_id", "list_node_id", "list_id", "depth")
           SELECT
           tli1."index_node_id",
-          tli1."index_link_id",
+          NEW."id",
           tli1."list_node_id",
           nextListId,
           (
@@ -186,6 +186,7 @@ export const F_LINK_INSERT_UP = `
             WHERE
             tli0."list_id" = targetOneListId."list_id" AND
             tli1."index_node_id" = tli0."index_node_id" AND
+            tli1."list_id" = tli0."list_id" AND
             tli1."depth" = tli0."depth"
             GROUP BY tli1."list_id", tli1."list_node_id"
           ) as tli2,
@@ -207,7 +208,7 @@ export const F_LINK_INSERT_UP = `
           INSERT INTO "links_indexes" ("index_node_id", "index_link_id", "list_node_id", "list_id", "depth")
           SELECT
           tli1."index_node_id",
-          tli1."index_link_id",
+          (CASE WHEN tli1."list_node_id" = NEW."target_id" THEN NEW."id" ELSE tli1."index_link_id" END),
           tli1."list_node_id",
           nextListId,
           ((tli1."depth" - targetOneListId."depth") + sourceListId."depth" + 1)
@@ -260,75 +261,19 @@ export const F_LINK_DELETE_UP = `
   BEGIN
   IF (SELECT "indexing" FROM "links_types" WHERE "id" = OLD."type_id")
   THEN
-    IF (${WILL_NOT_ROOT('OLD."target_id"')})
+    IF EXISTS (${WILL_NOT_ROOT('OLD."target_id"')})
     THEN
-      FOR sourceListId
-      IN (
+      DELETE FROM "links_indexes"
+      WHERE "id" IN (
         SELECT
-        DISTINCT sl0."list_id",
-        sl0."depth"
+        tli0."id"
         FROM
-        "links_indexes" as sl0
+        "links_indexes" as til0,
+        "links_indexes" as tli0
         WHERE
-        sl0."list_node_id" = OLD."source_id" AND
-        sl0."index_node_id" = OLD."source_id"
-      )
-      LOOP
-        DELETE FROM "links_indexes"
-        WHERE "list_id" IN (
-          SELECT r."list_id" FROM
-          (
-              SELECT
-              tsli0."list_id",
-              tsli0."list_node_id",
-              (
-                  SELECT COUNT(tli1."id")
-                  FROM "links_indexes" as tli1
-                  WHERE tli1."list_id" = tl1."list_id"
-              ) as "targetCount",
-              COUNT(tsli0."id") as "count"
-              FROM
-              (
-                  SELECT *
-                  FROM
-                  (
-                      SELECT
-                      tl0."list_id",
-                      tl0."list_node_id",
-                      COUNT(tl0."id") as "tl0"
-                      FROM
-                      "links_indexes" as sli0,
-                      "links_indexes" as tl0
-                      WHERE
-                      sli0."list_id" = sourceListId."list_id" AND
-                      tl0."list_node_id" = OLD."target_id" AND
-                      tl0."index_node_id" = sli0."index_node_id" AND
-                      tl0."depth" = sli0."depth"
-                      GROUP BY tl0."list_id", tl0."list_node_id"
-                  ) as tl0,
-                  (
-                      SELECT
-                      COUNT(sli0."id")
-                      FROM
-                      "links_indexes" as sli0
-                      WHERE
-                      sli0."list_id" = sourceListId."list_id"
-                  ) as sli0
-                  WHERE
-                  tl0."tl0" = sli0."count"
-              ) as tl1,
-              "links_indexes" as tli0,
-              "links_indexes" as tsli0
-              WHERE
-              tli0."list_id" = tl1."list_id" AND
-              tsli0."index_node_id" = tli0."index_node_id" AND
-              tsli0."depth" = tli0."depth"
-              GROUP BY tsli0."list_id", tsli0."list_node_id", tl1."list_id"
-          ) as r
-          WHERE
-          r."targetCount" = r."count"
-        );
-      END LOOP;
+        til0."index_link_id" = OLD."id" AND
+        tli0."list_id" = til0."list_id"
+      );
     ELSE
       SELECT *
       INTO sourceIgnoreListId
@@ -381,6 +326,7 @@ export const F_LINK_DELETE_UP = `
                       sli0."list_id" = sourceListId."list_id" AND
                       tl0."list_node_id" = OLD."target_id" AND
                       tl0."index_node_id" = sli0."index_node_id" AND
+                      /* tl0."list_id" = sli0."list_id" AND */
                       tl0."depth" = sli0."depth"
                       GROUP BY tl0."list_id", tl0."list_node_id"
                   ) as tl0,
@@ -473,6 +419,12 @@ export const F_LINK_DELETE_UP = `
         "depth" = "depth" - sourceIgnoreListId."depth" - 1
         WHERE
         "list_id" = targetListId."list_id";
+
+        UPDATE "links_indexes"
+        SET
+        "index_link_id" = NULL
+        WHERE
+        "index_link_id" = OLD."id";
       END LOOP;
     END IF;
   END IF;
