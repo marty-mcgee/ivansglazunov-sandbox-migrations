@@ -35,14 +35,43 @@ export interface IArrayRelationship {
   comment?: string;
 }
 
+export interface IPermissionRuleInsert {
+  set: any;
+  check: any;
+  columns: string[];
+}
+
+export interface IPermissionRuleSelect {
+  allow_aggregations: boolean;
+  computed_fields: [];
+  columns: string[];
+  filter: any;
+}
+
+export interface IPermissionRuleUpdate {
+  set: any;
+  columns: string[];
+  filter: any;
+}
+
+export interface IPermissionRuleDelete {
+  filter: any;
+}
+
+export interface IPermission<IPermissionRule> {
+  role: string;
+  comment: any;
+  permission: IPermissionRule;
+}
+
 export interface ITable {
   table: string;
   object_relationships: IObjectRelationship[];
   array_relationships: IArrayRelationship[];
-  insert_permissions: any[];
-  select_permissions: any[];
-  update_permissions: any[];
-  delete_permissions: any[];
+  insert_permissions: IPermission<IPermissionRuleInsert>[];
+  select_permissions: IPermission<IPermissionRuleSelect>[];
+  update_permissions: IPermission<IPermissionRuleUpdate>[];
+  delete_permissions: IPermission<IPermissionRuleDelete>[];
   event_triggers: any[];
 }
 

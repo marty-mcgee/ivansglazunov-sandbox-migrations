@@ -14,7 +14,10 @@ export async function up(knex: Knex) {
       .increments('id')
       .notNullable()
       .unique()
-      .primary()
+      .primary();
+
+    table
+      .text('user_id');
   });
 
   // nodes
