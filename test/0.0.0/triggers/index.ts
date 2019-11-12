@@ -13,7 +13,7 @@ import uniqid from 'uniqid';
 
 import { generateApolloClient } from '../../../imports/apollo';
 import { generateKnex } from '../../../imports/knex';
-import { clear, node, load, check, assert, link, autoAssert, unnode, unlink } from './methods';
+import { clear, node, load, check, assert, link, autoAssert, unlink } from './methods';
 
 export const client = generateApolloClient();
 export const knex = generateKnex();
@@ -25,7 +25,7 @@ describe('triggers', function() {
   it(`n1`, async function() {
     const n1 = await node(uniqid());
     await autoAssert(this.test.title);
-    await unnode(n1);
+    await unlink(n1);
     await autoAssert(this.test.title);
   });
   it(`n1>n2`, async function() {
@@ -35,8 +35,8 @@ describe('triggers', function() {
     await autoAssert(this.test.title);
     await unlink(l1);
     await autoAssert(this.test.title);
-    await unnode(n2);
-    await unnode(n1);
+    await unlink(n2);
+    await unlink(n1);
     await autoAssert(this.test.title);
   });
   it(`n1>n2>n3`, async function() {
@@ -49,9 +49,9 @@ describe('triggers', function() {
     await unlink(l1);
     await unlink(l2);
     await autoAssert(this.test.title);
-    await unnode(n3);
-    await unnode(n2);
-    await unnode(n1);
+    await unlink(n3);
+    await unlink(n2);
+    await unlink(n1);
     await autoAssert(this.test.title);
   });
   it(`n1>n2>n3,n4`, async function() {
@@ -67,10 +67,10 @@ describe('triggers', function() {
     await unlink(l2);
     await unlink(l3);
     await autoAssert(this.test.title);
-    await unnode(n4);
-    await unnode(n3);
-    await unnode(n2);
-    await unnode(n1);
+    await unlink(n4);
+    await unlink(n3);
+    await unlink(n2);
+    await unlink(n1);
     await autoAssert(this.test.title);
   });
   it(`n1>(n2>n3,n4),(n5>n6,n7)`, async function() {
@@ -95,13 +95,13 @@ describe('triggers', function() {
     await unlink(l5);
     await unlink(l6);
     await autoAssert(this.test.title);
-    await unnode(n7);
-    await unnode(n6);
-    await unnode(n5);
-    await unnode(n4);
-    await unnode(n3);
-    await unnode(n2);
-    await unnode(n1);
+    await unlink(n7);
+    await unlink(n6);
+    await unlink(n5);
+    await unlink(n4);
+    await unlink(n3);
+    await unlink(n2);
+    await unlink(n1);
     await autoAssert(this.test.title);
   });
 
@@ -119,9 +119,9 @@ describe('triggers', function() {
     await unlink(l3);
     await unlink(l4);
     await autoAssert(this.test.title);
-    await unnode(n3);
-    await unnode(n2);
-    await unnode(n1);
+    await unlink(n3);
+    await unlink(n2);
+    await unlink(n1);
     await autoAssert(this.test.title);
   });
 
@@ -147,13 +147,13 @@ describe('triggers', function() {
     await unlink(l5);
     await unlink(l6);
     await autoAssert(this.test.title);
-    await unnode(n7);
-    await unnode(n6);
-    await unnode(n5);
-    await unnode(n4);
-    await unnode(n3);
-    await unnode(n2);
-    await unnode(n1);
+    await unlink(n7);
+    await unlink(n6);
+    await unlink(n5);
+    await unlink(n4);
+    await unlink(n3);
+    await unlink(n2);
+    await unlink(n1);
     await autoAssert(this.test.title);
   });
 });

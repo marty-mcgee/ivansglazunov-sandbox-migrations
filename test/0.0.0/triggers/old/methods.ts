@@ -82,11 +82,11 @@ WHERE
   WHERE "l1"."source_id" = '${nodeId}'
 ) AND
 "nodes"."id" NOT IN (
-  SELECT "li1"."index_node_id"
+  SELECT "li1"."index_of_id"
   FROM "links_indexes" as "li1"
   WHERE
-  "li1"."list_node_id" = '${nodeId}' AND
-  "li1"."index_node_id" != '${nodeId}'
+  "li1"."list_of_id" = '${nodeId}' AND
+  "li1"."index_of_id" != '${nodeId}'
 );
 `;
 
@@ -120,14 +120,14 @@ export interface ILink {
   target?: INode;
   node_id?: string;
   node?: INode;
-  type_id?: number;
+  type?: string;
 }
 
 export interface IIndex {
   id: number;
-  list_node_id: string;
-  index_node_id: string;
-  index_link_id?: number;
+  list_of_id: string;
+  index_of_id: string;
+  index_in_id?: number;
   list_id: string;
   depth: number;
 }
@@ -151,7 +151,7 @@ export const linkIt = async (sourceId, targetId) => {
       links: insert_links(objects: $objects) { returning { id } }
     }`,
     variables: {
-      objects: { source_id: sourceId, target_id: targetId, type_id: 1 },
+      objects: { source_id: sourceId, target_id: targetId },
     }
   });
 };
@@ -188,17 +188,17 @@ export const linking = (_data) => {
   for (let i0 = 0; i0 < data.indexes.length; i0++) {
     const index = data.indexes[i0];
     data._indexes[data.indexes[i0].id] = index;
-    if (index.index_link_id) {
-      index.link = data._links[index.index_link_id];
-      data._links[index.index_link_id].indexes.push(index);
+    if (index.index_in_id) {
+      index.link = data._links[index.index_in_id];
+      data._links[index.index_in_id].indexes.push(index);
     }
-    if (index.index_node_id) {
-      index.index_node = data._nodes[index.index_node_id];
-      data._nodes[index.index_node_id].indexes_by_index.push(index);
+    if (index.index_of_id) {
+      index.index_node = data._nodes[index.index_of_id];
+      data._nodes[index.index_of_id].indexes_by_index.push(index);
     }
-    if (index.list_node_id) {
-      index.list_node = data._nodes[index.list_node_id];
-      data._nodes[index.list_node_id].indexes_by_list.push(index);
+    if (index.list_of_id) {
+      index.list_node = data._nodes[index.list_of_id];
+      data._nodes[index.list_of_id].indexes_by_list.push(index);
     }
   }
   return data;
