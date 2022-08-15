@@ -7,6 +7,7 @@ import { replace_metadata } from '../imports/replace_metadata';
 import Debug from 'debug';
 
 const debug = Debug('sandbox:0.0.0 metadata');
+// console.log("debug", debug)
 
 const delay = (time) => new Promise(res => setTimeout(res, time));
 
@@ -14,11 +15,15 @@ export async function up(knex: Knex) {
   debug('up');
 
   const md = await export_metadata();
+  
+  // await delay(1000)
+
+  console.log("md", md)
 
   const defineEasyPermissions = (table, role, columns, selectFilter = {}) => {
-    for (let i = 0; i < md.tables.length; i++) {
-      if (md.tables[i].table === table) {
-        md.tables[i].insert_permissions.push({
+    for (let i = 0; i < md.sources[0].tables.length; i++) {
+      if (md.sources[0].tables[i].table === table) {
+        md.sources[0].tables[i].insert_permissions.push({
           "role": role,
           "comment": null,
           "permission": {
@@ -27,7 +32,7 @@ export async function up(knex: Knex) {
             "columns": columns,
           },
         });
-        md.tables[i].select_permissions.push({
+        md.sources[0].tables[i].select_permissions.push({
           "role": role,
           "comment": null,
           "permission": {
@@ -37,7 +42,7 @@ export async function up(knex: Knex) {
             "filter": selectFilter
           },
         });
-        md.tables[i].update_permissions.push({
+        md.sources[0].tables[i].update_permissions.push({
           "role": role,
           "comment": null,
           "permission": {
@@ -46,7 +51,7 @@ export async function up(knex: Knex) {
             "filter": {}
           },
         });
-        md.tables[i].delete_permissions.push({
+        md.sources[0].tables[i].delete_permissions.push({
           "role": role,
           "comment": null,
           "permission": {
