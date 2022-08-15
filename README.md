@@ -1,4 +1,4 @@
-# sandbox_hasura_migrations
+# threedgarden sandbox_hasura_migrations
 
 ## env
 
